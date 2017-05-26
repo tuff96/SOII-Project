@@ -1,9 +1,6 @@
 #obj=
-tema1:
-	gcc -Wall -o count count.c
-.PHONY:clean
-clean:
-	-rm count
+project:
+	gcc -Wall -o find find.c
 .PHONY:run
 run:
-	./count
+	./find
