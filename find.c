@@ -13,8 +13,8 @@
 #include <time.h>
 #include <unistd.h>
 
-char s[1204];
-int nr = 0;
+char s[1204]; // for '+'
+int nr = 0;   // nr files
 
 int *User_Id = NULL;
 int *Group_Id = NULL;
@@ -30,7 +30,7 @@ time_t *Timestamp_Max = NULL;
 time_t *Timestamp_Mdata_Max = NULL;
 time_t *Timestamp_Mdata_Min = NULL;
 
-float compare(char *size) {
+float compare(char *size) { // for dim-min dim-max
 
   int s = strlen(size);
   if (s < 2)
@@ -50,7 +50,7 @@ float compare(char *size) {
   return 0;
 }
 
-void execute(char *filename) {
+void execute(char *filename) { // executa comenzi externe
   char *ar[1 << 10];
   int i = 0;
   char *token = strtok(Exec, " ");
@@ -105,7 +105,7 @@ int verificarenume(char *nume) {
   }
 }
 
-int verificarePermisiuni(struct stat *fStat) {
+int verificarePermisiuni(struct stat *fStat) { // pentru permisiuni
 
   if (strlen(Permisiuni) != 9) {
     return 0;
@@ -113,20 +113,20 @@ int verificarePermisiuni(struct stat *fStat) {
 
   if (((fStat->st_mode & S_IRUSR) == (Permisiuni[0] == 'r' ? S_IRUSR : 0)) &&
       ((fStat->st_mode & S_IWUSR) == (Permisiuni[1] == 'w' ? S_IWUSR : 0)) &&
-      ((fStat->st_mode & S_IXUSR) == (Permisiuni[2] == 'x' ? S_IXUSR : 0))
+      ((fStat->st_mode & S_IXUSR) == (Permisiuni[2] == 'x' ? S_IXUSR : 0)) &&
 
-      && ((fStat->st_mode & S_IRGRP) == (Permisiuni[3] == 'r' ? S_IRGRP : 0)) &&
+      ((fStat->st_mode & S_IRGRP) == (Permisiuni[3] == 'r' ? S_IRGRP : 0)) &&
       ((fStat->st_mode & S_IWGRP) == (Permisiuni[4] == 'w' ? S_IWGRP : 0)) &&
-      ((fStat->st_mode & S_IXGRP) == (Permisiuni[5] == 'x' ? S_IXGRP : 0))
+      ((fStat->st_mode & S_IXGRP) == (Permisiuni[5] == 'x' ? S_IXGRP : 0)) &&
 
-      && ((fStat->st_mode & S_IROTH) == (Permisiuni[6] == 'r' ? S_IROTH : 0)) &&
+      ((fStat->st_mode & S_IROTH) == (Permisiuni[6] == 'r' ? S_IROTH : 0)) &&
       ((fStat->st_mode & S_IWOTH) == (Permisiuni[7] == 'w' ? S_IWOTH : 0)) &&
       ((fStat->st_mode & S_IXOTH) == (Permisiuni[8] == 'x' ? S_IXOTH : 0)))
     return 1;
   return 0;
 }
 
-int verificare(struct stat *fStat) {
+int verificare(struct stat *fStat) { // verific daca argumentu a fost apelat
 
   if (User_Id != NULL) {
     if ((long)fStat->st_uid != *User_Id)
@@ -279,26 +279,27 @@ int main(int argc, char *argv[]) {
 
   while (1) {
     static struct option long_options[] = {
-        {"adancime-maxima", required_argument, 0, 'a'},
+        {"help", no_argument, 0, 'q'},
+        {"exec", required_argument, 0, 'e'},
         {"path", required_argument, 0, 'p'},
-        {"permisiuni,", required_argument, 0, 'P'},
         {"iname", required_argument, 0, 'i'},
+        {"userid", required_argument, 0, 'u'},
         {"dim-max", required_argument, 0, 'D'},
         {"dim-min", required_argument, 0, 'd'},
-        {"userid", required_argument, 0, 'u'},
         {"groupid", required_argument, 0, 'g'},
+        {"permisiuni,", required_argument, 0, 'P'},
         {"hardlink-min", required_argument, 0, 'h'},
         {"hardlink-max", required_argument, 0, 'H'},
         {"timestamp-min", required_argument, 0, 't'},
         {"timestamp-max", required_argument, 0, 'T'},
+        {"adancime-maxima", required_argument, 0, 'a'},
         {"timestamp-mdata-min", required_argument, 0, 'm'},
         {"timestamp-mdata-max", required_argument, 0, 'M'},
-        {"exec", required_argument, 0, 'e'},
         {0, 0, 0, 0}};
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "a:p:P:i:D:d:u:g:h:H:t:T:m:M:e:", long_options,
+    c = getopt_long(argc, argv, "a:p:P:i:D:d:u:g:h:H:t:T:m:M:e:q", long_options,
                     &option_index);
 
     /* Detect the end of the options. */
@@ -385,8 +386,37 @@ int main(int argc, char *argv[]) {
       *Dim_Max = compare(optarg);
       break;
 
+    case 'q':
+      printf("./find output : <nume fisier> <numar inode> <tip fisier> "
+             "<permisiuni> <numar linkuri> <userid> <groupid> <dimensiune> "
+             "<timestamp creare>\n\n");
+      printf("-a, --adancime-maxima   pentru a specifica pana la ce nivel se "
+             "merge cu recursivitatea\n");
+      printf("-d -D, --din-min --dim-max , pentru a afisa fisierele ce se "
+             "incadreaza in intervalul specificat in bytes(B), megabytes(MB) "
+             "sau gigabytes(GB) ex: ./find -d30B -D2GB\n");
+      printf("-H -h, --hardlink-max, --hardlink-min, pentru a afisa fisierele "
+             "ce se incadreaza in intervalul specificat numeric\n");
+      printf("-u -g, --userid, --groupid, pentru a specifica o cautare dupa "
+             "id-ul utilizatorului sau grupului asociat fisierului\n");
+      printf("-t -T, --timestamp-min, --timestamp-max pentru a cauta fisiere "
+             "create intr-un anumit interval\n");
+      printf("-m -M, --timestamp-mdata-min, --timestamp-mdata-max, pentru a "
+             "cauta fisiere modificate intr-un anumit interval\n");
+      printf("-P, --permisiuni, pentru a cauta fisierele ce au setate anumite "
+             "permisiuni (masca de permisiuni va fi declarata in formatul "
+             "`rwxrwxrwx`)\n");
+      printf("-i, --iname, pentru a cauta fisiere al caror nume este "
+             "reprezentat de expresia regulata definita \n");
+      printf("-p, --path path-ul\n");
+      printf("-e, --exec executa comenzi externe\n");
+      exit(0);
+      break;
+
     case '?':
       /* getopt_long already printed an error message. */
+      printf("\n  try ./find --help or -q \n\n");
+      exit(0);
       break;
 
     default:
